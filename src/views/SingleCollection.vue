@@ -13,8 +13,10 @@
         hover
         :items="collection.movies"
         :fields="fields"
-        small
       >
+      <template v-slot:cell(title)="link">
+          <b-link @click="viewMovie(link.item.id)">{{ link.item.title }}</b-link>
+      </template>
       </b-table>
 
     </b-container>
@@ -24,7 +26,7 @@
 
 <script>
   import Header from '@/components/Header.vue';
-  import {mapState, mapActions} from 'vuex';
+  import {mapActions} from 'vuex';
 
   export default {
     name: 'SingleCollection',
@@ -35,17 +37,15 @@
 
     data() {
       return {
-        fields : ['title', 'release_date'],
-        subtitle: 'Your collection: '
+        fields: [
+          {key : 'title'},
+          {key : 'category.label', label : 'Category'},
+          {key : 'release_date', label : 'Released on'}
+          ],
+        subtitle: 'Your collection: ',
+        collection: null
       }
     },
-
-    computed: {
-      ...mapState([
-        'collection'
-      ])
-    },
-
 
     methods: {
       ...mapActions([
@@ -54,12 +54,18 @@
 
       editCollection : function() {
         this.$router.push({name : 'editCollection', params: {id : this.collection.id}});
-      }
+      },
+
+      viewMovie : function(id){
+        this.$router.push({name : 'movie', params : {id : id}})
+      },
 
     },
 
     mounted() {
-      this.getCollectionById(this.$route.params.id);
+      this.getCollectionById(this.$route.params.id).then(obj => {
+        this.collection = obj;
+      });
     }
     
   }

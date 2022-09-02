@@ -16,6 +16,9 @@
               <router-link :to="{name : 'trendingMovies'}"> Trending </router-link>
             </b-nav-item>
             <b-nav-item>
+              <router-link :to="{name : 'topRatedMovies'}"> Top rated </router-link>
+            </b-nav-item>
+            <b-nav-item>
               <router-link :to="{name : 'searchMovies'}"> Search </router-link>
             </b-nav-item>
           </b-navbar-nav>
@@ -31,9 +34,6 @@
             <b-nav-item v-else @click="logout()">Log Out</b-nav-item>
 
             <b-nav-item-dropdown v-if="token" text="Menu">
-              <b-dropdown-item :to="{name : 'profile'}">
-                Profile
-              </b-dropdown-item>
               <b-dropdown-item :to="{name : 'userCollections'}">
                 My collection
               </b-dropdown-item>

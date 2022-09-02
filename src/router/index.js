@@ -3,13 +3,15 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import SearchMovies from '../views/SearchMovies.vue'
 import TrendingMovies from '../views/TrendingMovies'
+import TopRatedMovies from '../views/TopRatedMovies'
 import Login from '../views/Login'
 import Register from '../views/Register'
-import Profile from '../views/Profile'
 import UserCollections from '../views/UserCollections'
 import Movie from '../views/Movie'
 import SingleCollection from '../views/SingleCollection'
 import EditCollection from '../views/EditCollection'
+import Celebrity from '../views/Celebrity'
+import CreateOrEditCollection from '../views/CreateOrEditCollection'
 
 Vue.use(VueRouter)
 
@@ -40,30 +42,52 @@ const routes = [
     component: TrendingMovies
   },
   {
-    path: '/profile',
-    name: 'profile',
-    component: Profile
+    path: '/toprated',
+    name: 'topRatedMovies',
+    component: TopRatedMovies
   },
   {
     path: '/collections',
     name: 'userCollections',
+    meta: {
+      authRequired: true,
+    },
     component: UserCollections
   },
   {
-    path: '/collection/:id?',
+    path: '/collection/:id',
     name: 'collection',
+    meta: {
+      authRequired: true,
+    },
     component: SingleCollection
   },
   {
-    path: '/collection/:id?/edit',
+    path: '/collection-form/:id?',
+    name: 'collectionForm',
+    meta: {
+      authRequired: true,
+    },
+    component: CreateOrEditCollection
+  },
+  {
+    path: '/collection/:id/edit',
     name: 'editCollection',
+    meta: {
+      authRequired: true,
+    },
     component: EditCollection
   },
   {
-    path: '/movie/:id?',
+    path: '/movie/:id',
     name: 'movie',
     component: Movie
   },
+  {
+    path: '/celebrity/:id',
+    name: 'celebrity',
+    component: Celebrity
+  }
 ]
 
 const router = new VueRouter({
@@ -71,5 +95,17 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes
 })
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.authRequired) {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      next({name: 'login'});
+      return;
+    }
+  }
+  next();
+});
 
 export default router

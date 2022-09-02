@@ -13,7 +13,7 @@
     components: {
       Header
     }
-    
+
   }
 
 </script>

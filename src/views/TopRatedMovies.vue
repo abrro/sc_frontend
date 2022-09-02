@@ -1,7 +1,7 @@
 <template>
   <div>
     <Header subtitle="Top rated movies" />
-    <MovieCards v-if="trendingMovies.length > 0" :mode="1" :movies="trendingMovies" />
+    <MovieCards v-if="topRatedMovies.length > 0" :mode="2" :movies="topRatedMovies" />
   </div>
 </template>
 
@@ -11,28 +11,28 @@
   import { mapActions } from 'vuex';
 
   export default {
-    name: 'TrendingMovies',
+    name: 'TopRatedMovies',
 
     components: {
       Header,
       MovieCards
     },
 
-    data(){
+    data() {
       return {
-        trendingMovies : []
+        topRatedMovies : []
       }
     },
 
     methods: {
       ...mapActions([
-        'getTrendingMovies'
+        'getTopRatedMovies'
       ]),
     },
 
     mounted() {
-      this.getTrendingMovies().then(obj => {
-        this.trendingMovies = obj;
+      this.getTopRatedMovies().then(obj => {
+        this.topRatedMovies = obj;
       });
     }
 

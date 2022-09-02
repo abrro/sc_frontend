@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Header subtitle="Add to collection:"/>
+    <Header subtitle="Add or remove movies:"/>
 
     <b-container>
         <b-form @submit="saveChanges">
@@ -8,11 +8,11 @@
         </b-form>
       </b-container>
 
-    <b-container v-if="editCollection">
+    <b-container v-if="moviesCopy.length">
       <b-table
         id="movies-to-add"
         hover
-        :items="editCollection.movies"
+        :items="moviesCopy"
         :fields="collectionFields"
       >
         <template v-slot:cell(action)="row">
@@ -22,38 +22,49 @@
 
     </b-container>
 
-    <SearchForm/>
+    <b-container fluid>
 
-    <b-container v-if="moviesSearchResult.count">
+      <b-form @submit="submitSearch">
+
+        <b-form-group
+            id="serach-input-group"
+            label="Search:"
+            label-for="search-input"
+        >
+          <b-form-input
+              id="search-input"
+              v-model="searchInput"
+              type="text"
+              placeholder="Search movies by title..."
+              required
+          ></b-form-input>
+        </b-form-group>
+
+        <b-button type="submit" variant="primary">Submit</b-button>
+
+      </b-form>
+    </b-container>
+
+    <b-container v-if="moviesSearchResult.length">
 
       <h3>Results:</h3>
-
-      <b-pagination
-          v-model="currentPage"
-          :total-rows="moviesSearchResult.count"
-          :per-page="perPage"
-          aria-controls="movies-table"
-        ></b-pagination>
-
+      
         <b-table
-          id="movies-table"
           hover
-          :items="moviesSearchResult.rows"
-          :fields="searchFields"
+          :items="moviesSearchResult"
           :per-page="perPage"
           :current-page="currentPage"
-          head-variant="dark"
-        >
+          :fields="searchFields"
+          >
           <template v-slot:cell(action)="row">
-          <b-button size="sm" @click="addMovie(row.item)">Add</b-button>
+            <b-button size="sm" :disabled="alreadyContained(row.item)" @click="addMovie(row.item)">Add</b-button>
           </template>
         </b-table>
 
         <b-pagination
           v-model="currentPage"
-          :total-rows="moviesSearchResult.count"
+          :total-rows="moviesSearchResult.length"
           :per-page="perPage"
-          aria-controls="movies-table"
         ></b-pagination>
 
     </b-container>
@@ -63,19 +74,21 @@
 
 <script>
   import Header from '@/components/Header.vue';
-  import SearchForm from '@/components/SearchForm.vue';
   import {mapState, mapActions, mapMutations} from 'vuex';
 
   export default {
     name: 'EditCollection',
 
     components: {
-      Header,
-      SearchForm
+      Header
     },
 
     data() {
       return {
+        collection: null,
+        moviesCopy: [],
+        searchInput: '',
+        searchTitle: '',
         currentPage : 1,
         perPage : 10,
         searchFields: [
@@ -93,78 +106,74 @@
 
     computed: {
       ...mapState([
-        'collection',
-        'editCollection',
-        'moviesSearchResult',
+        'moviesSearchResult'
       ])
-    },
-
-    watch: {
-      currentPage(nVal, oVal) {
-        this.searchMovies({"page" : this.currentPage, "title" : this.searchTitle});
-      }
     },
 
     methods: {
       ...mapActions([
         'getCollectionById',
-        'collectionSave'
+        'collectionSave',
+        'searchMovies'
       ]),
 
       ...mapMutations([
-        'copyToEditCollection',
-        'addEditCollection',
-        'removeEditCollection',
+        'resetMovieSearchResult'
       ]),
 
       addMovie : function(item) {
-        this.addEditCollection(item);
+        this.moviesCopy.push(item);
+      },
+
+      alreadyContained : function(item) {
+        if(this.moviesCopy.map(movie => movie.id).includes(item.id)){
+          return true;
+        }
+        return false;
       },
 
       removeMovie : function(id) {
-        this.removeEditCollection(id);
+        this.moviesCopy = this.moviesCopy.filter(mov => mov.id != id);
       },
 
       saveChanges : function(e) {
         e.preventDefault();
 
-        const payload = [];
+        const list_body = [];
         const collectionId = this.$route.params.id;
-        this.editCollection.movies.forEach(el => {
-          payload.push({"movielistsId" : collectionId, "movieId": el.id});
+        this.moviesCopy.forEach(el => {
+          list_body.push({"movielistsId" : collectionId, "movieId": el.id});
         });
-        this.collectionSave({"payload" : {"list_body" : payload}, "movielistsId": collectionId});
-        this.$router.push({name: 'collection', params: {id: collectionId}});
-        // fetch(`http://127.0.0.1:8000/api/movielists/${collectionId}`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json', 'Authorization' : `Bearer ${localStorage.token}`},
-        //   body: JSON.stringify({"list_body" : payload})
-        // }).then( res => res.json() ).then(res => console.log(res));
+        const payload = {"list_body" : list_body};
+        //this.collectionSave({"payload" : {"list_body" : payload}, "movielistsId": collectionId, "movieList" : this.moviesCopy});
+        this.collectionSave({payload : payload, movielistsId : collectionId, movieList : this.moviesCopy}).then(res => {
+          alert(res.message);
+          this.$router.push({name: 'collection', params: {id: collectionId}});
+        });
+      },
+
+      submitSearch: function (e) {
+        e.preventDefault();
+
+        this.searchTitle = this.searchInput;
+        this.searchInput = '';
+
+        this.currentPage = 1;
+
+        this.searchMovies({
+          page: this.currentPage,
+          title: this.searchTitle
+        });
       }
 
-      // addAll : function(e) {
-      //   e.preventDefault();
-        
-      //   const payload = [];
-      //   const collectionId = this.$route.params.id;
-
-      //   this.selectedMovies.forEach(element => {
-      //     payload.push({"movielistsId" : collectionId, "movieId" : element.id});
-      //   });
-
-      //   fetch(`http://127.0.0.1:8000/api/movielists/${collectionId}`, {
-      //     method: 'POST',
-      //     headers: { 'Content-Type': 'application/json', 'Authorization' : `Bearer ${localStorage.token}`},
-      //     body: JSON.stringify(payload)
-      //   }).then( res => res.json() ).then(res => console.log(res));
-      // }
     },
 
     mounted() {
-      if(!this.collection){
-        this.getCollectionById(this.$route.params.id);
-      }
-      this.copyToEditCollection();
+      this.getCollectionById(this.$route.params.id).then(col => {
+        this.collection = col;
+        this.moviesCopy = this.collection.movies;
+      });
+      this.resetMovieSearchResult();
     }
   }
 

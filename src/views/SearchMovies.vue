@@ -25,97 +25,39 @@
       </b-form>
     </b-container>
 
-    <b-container v-if="searchCount > 0">
-
-      {{movies}}
-
-      <h3>Results:</h3>
-
-      <b-pagination
-          v-model="currentPage"
-          :total-rows="searchCount"
-          :per-page="perPage"
-          aria-controls="movies-table"
-        ></b-pagination>
-
-        <b-table
-          id="movies-table"
-          hover
-          :per-page="perPage"
-          :current-page="currentPage"
-          :items="movies"
-          :fields="fields"
-          >
-        </b-table>
-    </b-container>
+    <MovieSearchTable v-if="searchCount > 0" :searchCount="searchCount"  :searchTitle="searchTitle"/>
+    <h2 v-else-if="searchCount == 0">No results found for: {{searchTitle}}</h2>
 
   </div>
 </template>
 
 <script>
   import Header from '@/components/Header.vue';
-  //import {mapActions, mapMutations, mapState} from 'vuex';
-
+  import MovieSearchTable from '@/components/MovieSearchTable.vue'
   export default {
     name: 'SearchMovies',
 
     components: {
       Header,
+      MovieSearchTable
     },
 
     data() {
       return {
-          movies: [],
-          searchInput: '',
-          searchTitle: '',
-          searchCount: 0,
-          currentPage : 1,
-          perPage : 10,
-          fields: ['title', 'release_date']
-        }
-    },
-
-    // computed: {
-    //   ...mapState([
-    //     'moviesSearchResult',
-    //     'searchCount'
-    //   ])
-    // },
-    watch: {
-      currentPage (nVal, oVal) {
-        //da vraca promise...count ---> vezbe
-        //this.searchMovies({"page" : this.currentPage, "title" : this.searchTitle});
-        fetch(`http://127.0.0.1:8000/api/movies/page/${nVal}/search?title=${this.searchTitle}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.token}`
-            }
-          })
-          .then(obj => obj.json())
-          .then(res => {
-            this.movies = res.rows;
-          });
+        searchInput: '',
+        searchTitle: '',
+        searchCount: -1
       }
     },
 
     methods: {
-      // ...mapActions([
-      //   'searchMovies',
-      // ]),
-
-      // ...mapMutations([
-      //   'resetMovieSearchResults',
-      // ]),
-
-      submitSearch : function(e){
+      submitSearch: function (e) {
         e.preventDefault();
 
-        this.currentPage = 1;
         this.searchTitle = this.searchInput;
         this.searchInput = '';
-        //this.setSearchTitle(this.searchTitle);
-        //this.searchMovies({"page" : this.currentPage, "title" : this.searchTitle});
-        fetch(`http://127.0.0.1:8000/api/movies/page/${this.currentPage}/search?title=${this.searchTitle}`, {
+
+        fetch(`http://127.0.0.1:8000/api/movies/count/search?title=${this.searchTitle}`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${localStorage.token}`
@@ -123,8 +65,7 @@
           })
           .then(obj => obj.json())
           .then(res => {
-            this.searchCount = res.count;
-            this.movies = res.rows;
+            this.searchCount = res;
           });
       }
     }

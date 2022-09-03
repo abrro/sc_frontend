@@ -75,6 +75,14 @@
       }
     },
 
+    sockets: {
+      error(err) {
+        if(err.message){
+          alert(err.message);
+        }
+      }
+    },
+
     mounted() {
       if (localStorage.token) {
         this.setToken(localStorage.token);

@@ -62,7 +62,7 @@
   import { required, minLength, maxLength} from "vuelidate/lib/validators";
 
   export default {
-    name: 'Template',
+    name: 'CollectionForm',
 
     components: {
       Header

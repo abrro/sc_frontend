@@ -93,6 +93,13 @@ export default new Vuex.Store({
       if(index > -1){
         state.userCollections[index].movies = movies;
       }
+    },
+
+    addReview(state, review) {
+      const index = state.movies.findIndex( movie => movie.id == review.movieId );
+      if (index > -1) {
+        state.movies[index].reviews.push(review);
+      }
     }
   },
 
@@ -300,6 +307,11 @@ export default new Vuex.Store({
         });
       });
     },
+
+    socket_review({ commit }, msg) {
+      const review = JSON.parse(msg);
+      commit('addReview', review);
+    }
 
   },
 
